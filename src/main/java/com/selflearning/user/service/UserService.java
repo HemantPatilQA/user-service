@@ -28,11 +28,17 @@ public class UserService {
         RestTemplateVO VO = new RestTemplateVO();
         User user = userRepository.findByUserId(userId);
 
-        Department department = restTemplate.getForObject("http://localhost:9001/departments/" + user.getDepartmentId(), Department.class);
+        //Department department = restTemplate.getForObject("http://localhost:9001/departments/" + user.getDepartmentId(), Department.class);
+        Department department = getDepartment(user.getDepartmentId().toString());
 
         VO.setUser(user);
         VO.setDepartment(department);
 
         return VO;
+    }
+
+    public Department getDepartment(String deprtmentId) {
+//        return restTemplate.getForObject(String.format("/address/%s", addressId), Address.class);
+        return restTemplate.getForObject(String.format("http://localhost:9001/departments/%s", deprtmentId), Department.class);
     }
 }
