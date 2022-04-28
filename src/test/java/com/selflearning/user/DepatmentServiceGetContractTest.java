@@ -9,6 +9,7 @@ import au.com.dius.pact.core.model.RequestResponsePact;
 import au.com.dius.pact.core.model.annotations.Pact;
 import com.selflearning.user.VO.Department;
 import com.selflearning.user.repository.UserRepository;
+import com.selflearning.user.service.DepartmentServiceClient;
 import com.selflearning.user.service.UserService;
 import org.junit.Rule;
 import org.junit.Test;
@@ -17,12 +18,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE,
         properties = "department_provider.base-url:http://localhost:${RANDOM_PORT}",
-        classes = UserService.class)
+        classes = DepartmentServiceClient.class)
 public class DepatmentServiceGetContractTest {
     private static final int DEPARTMENT_ID = 1;
     private static final String DEPARTMENT_NAME = "IT";
@@ -30,14 +34,11 @@ public class DepatmentServiceGetContractTest {
     private static final String DEPARTMENT_CODE = "IT-001";
 
     @Rule
-    public PactProviderRule provider = new PactProviderRule("address_provider", null,
+    public PactProviderRule provider = new PactProviderRule("department_provider", null,
             RandomPort.getInstance().getPort(), this);
 
     @Autowired
-    private UserService userService;
-
-    @Autowired
-    private UserRepository userRepository;
+    private DepartmentServiceClient departmentServiceClient;
 
     @Pact(consumer = "customer_consumer")
     public RequestResponsePact pactForGetExistingAddressId(PactDslWithProvider builder) {
@@ -55,6 +56,9 @@ public class DepatmentServiceGetContractTest {
                 .stringType("departmentCode", DEPARTMENT_CODE)
         ).build();
 
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Content-Type", "application/json");
+
         return builder.given(
                         "Department GET: the department ID matches an existing department ID")
                 .uponReceiving("A request for Department data")
@@ -62,6 +66,7 @@ public class DepatmentServiceGetContractTest {
                 .method("GET")
                 .willRespondWith()
                 .status(200)
+                .headers(headers)
                 .body(responseBody)
                 .toPact();
     }
@@ -70,7 +75,7 @@ public class DepatmentServiceGetContractTest {
     @Test
     public void testFor_GET_existingDepartmentId_shouldYieldExpectedDepartmentData() {
 
-        final Department department = userService.getDepartment(""+DEPARTMENT_ID);
+        final Department department = departmentServiceClient.getDepartment(""+DEPARTMENT_ID);
 
         assertThat(department.getDepartmentId()).isEqualTo(DEPARTMENT_ID);
         assertThat(department.getDepartmentName()).isEqualTo(DEPARTMENT_NAME);
